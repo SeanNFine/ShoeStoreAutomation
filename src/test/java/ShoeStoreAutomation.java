@@ -1,21 +1,17 @@
-import org.junit.AfterClass;
-import org.junit.Test;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
+import org.testng.annotations.DataProvider;
 import org.testng.asserts.SoftAssert;
 
 import java.util.List;
 
 public class ShoeStoreAutomation {
 
-    private static WebDriver driver = new ChromeDriver();
-
-    @AfterClass
-    public static void quitDriver() {
-        driver.quit();
-    }
+    private static WebDriver driver;
 
     /**
      * Test to cover Story 1: Monthly Display of new releases
@@ -23,41 +19,29 @@ public class ShoeStoreAutomation {
      * 2) Shoe entries should display an image each shoe being released
      * 3) Each shoe should have a suggested price pricing
      */
-    @Test
-    public void shoesShouldHaveDetailsTest(){
+    @Test(dataProvider = "months")
+    public void shoesShouldHaveDetailsTest(String month){
+        driver = new ChromeDriver();
         ShoeStorePage shoeStorePage = new ShoeStorePage(driver);
 
-        int numberOfMonthLinks = shoeStorePage.getNumberOfMonthLinks();
-
-        System.out.println("Month amount (should be 12): "+numberOfMonthLinks);
         SoftAssert softAssert = new SoftAssert();
-        for(int i = 0; i < numberOfMonthLinks; i++) {
-            shoeStorePage.clickMonthLinkByIndex(i);
+        shoeStorePage.clickMonthLinkByName(month);
 
-            List<WebElement> shoeResults = shoeStorePage.getShoeResults();
-            WebElement shoeResult;
-            String shoeDescription;
-            String shoeImageSrc;
-            boolean isShoeImageActive;
-            String shoePrice;
-            for (int j = 0; j < shoeResults.size(); j++) {
-                shoeResult = shoeResults.get(j);
-                shoeDescription = shoeStorePage.getShoeDescriptionFromResult(shoeResult);
-                shoeImageSrc = shoeStorePage.getShoeImageSrcFromResult(shoeResult);
-                isShoeImageActive = shoeStorePage.isShoeImageFromResultActive(shoeResult);
-                shoePrice = shoeStorePage.getShoePriceFromResult(shoeResult);
+        List<WebElement> shoeResults = shoeStorePage.getShoeResults();
+        WebElement shoeResult;
+        for (int j = 0; j < shoeResults.size(); j++) {
+            shoeResult = shoeResults.get(j);
 
-                System.out.println("Shoe Desc: " + shoeDescription);
-                System.out.println("Shoe Image Src: " + shoeImageSrc);
-                System.out.println("Shoe Image Active: " + isShoeImageActive);
-                System.out.println("Shoe Price: " + shoePrice);
-
-                softAssert.assertNotEquals(shoeDescription, "", "Shoe does not have a description.");
-                softAssert.assertNotEquals(shoeImageSrc, "", "Shoe does not have a image src.");
-                softAssert.assertTrue(isShoeImageActive, "Shoe image is not active.");
-                softAssert.assertNotEquals(shoePrice, "", "Shoe does not have a price.");
-            }
+            softAssert.assertNotEquals(shoeStorePage.getShoeDescriptionFromResult(shoeResult), "",
+                    "Shoe does not have a description.");
+            softAssert.assertNotEquals(shoeStorePage.getShoeImageSrcFromResult(shoeResult), "",
+                    "Shoe does not have a image src.");
+            softAssert.assertTrue(shoeStorePage.isShoeImageFromResultActive(shoeResult),
+                    "Shoe image is not active.");
+            softAssert.assertNotEquals(shoeStorePage.getShoePriceFromResult(shoeResult), "",
+                    "Shoe does not have a price.");
         }
+
         softAssert.assertAll();
     }
 
@@ -69,7 +53,10 @@ public class ShoeStoreAutomation {
      */
     @Test
     public void shouldSubmitEmailTest(){
+        driver = new ChromeDriver();
         ShoeStorePage shoeStorePage = new ShoeStorePage(driver);
+
+        Assert.assertTrue(shoeStorePage.isEmailInputDisplayedAndEnabled(), "Email is not Displayed or not Enabled");
 
         shoeStorePage.enterEmail("test@test.com");
         shoeStorePage.clickEmailSubmitButton();
@@ -77,5 +64,33 @@ public class ShoeStoreAutomation {
 
         Assert.assertEquals(notificationText,"Thanks! We will notify you of our new shoes at this email: test@test.com",
                 "Notification message is not 'Thanks! We will notify you of our new shoes at this email: test@test.com");
+    }
+
+    @AfterMethod
+    public void tearDown()
+    {
+        driver.quit();
+    }
+
+    /*DataProvider for Months.
+        Possibly can be ran in parallel,
+        though may require a stronger machine.
+     */
+    @DataProvider
+    public static Object[][] months() {
+        return new Object[][]{
+            {"January"},
+            {"February"},
+            {"March"},
+            {"April"},
+            {"May"},
+            {"June"},
+            {"July"},
+            {"August"},
+            {"September"},
+            {"October"},
+            {"November"},
+            {"December"}
+        };
     }
 }

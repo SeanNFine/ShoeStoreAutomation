@@ -5,13 +5,15 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 class ShoeStorePage {
 
     private final WebDriver driver;
+    private final WebDriverWait wait;
     private static final By LNKS_MONTH = By.cssSelector("div#header_nav nav a");
     private static final By SHOE_CARDS = By.cssSelector("div.shoe_result");
     private static final By SHOE_DESCRIPTION = By.cssSelector("td.shoe_description");
@@ -23,38 +25,25 @@ class ShoeStorePage {
 
     ShoeStorePage(WebDriver driver) {
         this.driver = driver;
-        driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+        this.wait = new WebDriverWait(driver,10);
         driver.get("http://shoestore-manheim.rhcloud.com/");
+        wait.until(ExpectedConditions.visibilityOfElementLocated(LNKS_MONTH));
     }
 
     void enterEmail(String s) {
         WebElement emailInput =  driver.findElement(INPUT_EMAIL);
-        emailInput.sendKeys("test@test.com");
+        emailInput.sendKeys(s);
     }
 
     void clickEmailSubmitButton() {
         WebElement submitEmail = driver.findElement(BTN_EMAIL_SUBMIT);
         submitEmail.click();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(NOTIFICATION));
     }
 
     String getNotificationText() {
         WebElement notification = driver.findElement(NOTIFICATION);
         return notification.getText();
-    }
-
-    void clickMonthLinkByIndex(int i) {
-        WebElement monthLink = driver.findElements(LNKS_MONTH).get(i);
-        /*Page seems to take a significant time to load, particularly due to the images loading.
-            Could not find a way around this without breaking the remainder of the tests.
-            Therefore the tests run, but take a significant time because of load issues.
-
-          One could implement a pageLoadTimeout and the test would still fail for good reason
-            since the images are not loading properly.*/
-        monthLink.click();
-    }
-
-    int getNumberOfMonthLinks() {
-        return driver.findElements(LNKS_MONTH).size();
     }
 
     List<WebElement> getShoeResults() {
@@ -92,5 +81,21 @@ class ShoeStorePage {
 
     String getShoeImageSrcFromResult(WebElement shoeResult) {
         return shoeResult.findElement(SHOE_IMAGE).getAttribute("src");
+    }
+
+    boolean isEmailInputDisplayedAndEnabled() {
+        WebElement emailInput = driver.findElement(INPUT_EMAIL);
+        return emailInput.isDisplayed() && emailInput.isEnabled();
+    }
+
+    void clickMonthLinkByName(String month) {
+         /*Page seems to take a significant time (Approx 3 minutes) to load, particularly due to the images loading.
+            Could not find a way around this without breaking the remainder of the tests.
+            Therefore the tests run, but take a significant time because of load issues.
+
+          One could implement a pageLoadTimeout and the test would still fail for good reason
+            since the images are not loading properly.*/
+        driver.findElement(By.linkText(month)).click();
+        wait.until(ExpectedConditions.titleContains(month));
     }
 }

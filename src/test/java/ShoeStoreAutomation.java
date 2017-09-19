@@ -46,7 +46,7 @@ public class ShoeStoreAutomation {
     }
 
     /**
-     * Test to cover Story 2:
+     * Test to cover Story 2: Submit email for reminder
      * 1) There should be an area to submit email address
      * 2) on successful submission of a valid email address user should receive a message:
      * "Thanks! We will notify you of our new shoes at this email: users email address"
@@ -66,16 +66,13 @@ public class ShoeStoreAutomation {
                 "Notification message is not 'Thanks! We will notify you of our new shoes at this email: test@test.com");
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     public void tearDown()
     {
         driver.quit();
     }
 
-    /*DataProvider for Months.
-        Possibly can be ran in parallel,
-        though may require a stronger machine.
-     */
+    /*DataProvider for Months.*/
     @DataProvider
     public static Object[][] months() {
         return new Object[][]{
